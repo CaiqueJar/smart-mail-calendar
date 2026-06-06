@@ -14,6 +14,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
         "sender",
         "sent_at",
         "priority",
+        "should_create_calendar_event",
+        "category",
         "content",
     ]),
 ]

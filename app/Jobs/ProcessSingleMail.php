@@ -58,7 +58,38 @@ class ProcessSingleMail implements ShouldQueue
             $bodyRaw = $body["body"]["data"] ?? "";
             $body = $this->base64UrlDecode($bodyRaw);
             $body = mb_convert_encoding($body, "UTF-8", "UTF-8");
+
+            $prompt = "Assunto: {$subject}\n\n{$body}";
+
+            $messageAgent = new MessageAgent();
             
+            try {
+                $response = $messageAgent->prompt($prompt, provider: Lab::Groq);
+            } catch (\Throwable $e) {
+                logger()->error("Erro ao processar email", [
+                    "message" => $e->getMessage(),
+                ]);
+                return;
+            }
+
+            $response = json_decode($response);
+
+            $message = "{$response->category} ({$response->priority})\n\n";
+
+            $message .= "{$response->message}\n\n";
+
+            Message::create([
+                "user_id" => $this->userId,
+                "source_id" => $this->message["id"],
+                "source_type" => "gmail",
+                "title" => $subject,
+                "sender" => $headers->firstWhere("name", "From")["value"] ?? null,
+                "sent_at" => \Carbon\Carbon::parse($headers->firstWhere("name", "Date")["value"] ?? null),
+                "priority" => ucfirst($response->priority),
+                "should_create_calendar_event" => $response->should_create_event ?? false,
+                "category" => $response->category,
+                "content" => $message,
+            ]);
         } catch (\Throwable $e) {
             if (str_contains($e->getMessage(), 'rate limited')) {
                 $this->release(delay: now()->addSeconds(60));
