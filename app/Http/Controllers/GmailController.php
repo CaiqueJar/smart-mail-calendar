@@ -17,7 +17,7 @@ class GmailController extends Controller
         $token = $user->googleAccount->getValidToken();
 
         if (!$token) {
-            return redirect()->route('auth.google')->withErrors(['msg' => 'Failed to refresh Google token. Please login again.']);
+            return redirect()->route('login')->withErrors(['msg' => 'Failed to refresh Google token. Please login again.']);
         }
 
         $response = Http::withToken($token)->get(
