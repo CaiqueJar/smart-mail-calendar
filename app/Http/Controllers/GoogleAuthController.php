@@ -55,6 +55,6 @@ class GoogleAuthController extends Controller
 
         Auth::login($user, true);
 
-        return redirect()->route('');
+        return redirect()->route('gmail.checkmails');
     }
 }
