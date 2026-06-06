@@ -183,9 +183,14 @@ class MessageAgent implements Agent, Conversational, HasTools
 
             dd/mm/aaaa
 
-            Caso não exista:
+            REGRAS OBRIGATÓRIAS:
 
-            null
+            * Se a data estiver explícita no email, use-a.
+            * Se should_create_calendar_event for true MAS não houver data explícita:
+              - Para atividades/entregas sem prazo: use 5 dias a partir de hoje (06/06/2026 → 11/06/2026)
+              - Para provas/avaliações: use 7 dias a partir de hoje (06/06/2026 → 13/06/2026)
+              - Para cancelamentos/remarcações: use a data mencionada ou o próximo dia útil
+            * NUNCA retorne null se should_create_calendar_event for true.
 
             EVENT_TIME
 
@@ -201,9 +206,16 @@ class MessageAgent implements Agent, Conversational, HasTools
             * 08:30
             * 14:15
 
-            Caso não exista:
+            REGRAS OBRIGATÓRIAS:
 
-            null
+            * Se o horário estiver explícito no email, use-o.
+            * Se should_create_calendar_event for true MAS não houver horário explícito:
+              - Para atividades/entregas: use 09:00
+              - Para provas/avaliações: use 14:00
+              - Para apresentações: use 19:00
+              - Para aulas/cancelamentos: use 09:00
+              - Para eventos: use 18:00
+            * NUNCA retorne null se should_create_calendar_event for true.
 
             MESSAGE
 
@@ -224,7 +236,6 @@ class MessageAgent implements Agent, Conversational, HasTools
             {
             "category": "Atividade",
             "priority": "Alta",
-            "emoji": "📝",
             "action": "Estudar para prova",
             "deadline": "12/06/2026",
             "event_time": "19:00",

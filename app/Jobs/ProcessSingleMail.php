@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Actions\CreateCalendarEvent;
 use App\Actions\SendWhatsappMessage;
 use App\Ai\Agents\MessageAgent;
 use App\Models\GoogleAccount;
@@ -90,6 +91,25 @@ class ProcessSingleMail implements ShouldQueue
                 "category" => $response->category,
                 "content" => $message,
             ]);
+            info(json_encode($response, JSON_PRETTY_PRINT));
+
+            if(!$response->should_create_calendar_event) {
+                return;
+            }
+
+            $start = \Carbon\Carbon::createFromFormat(
+                'd/m/Y H:i',
+                "{$response->deadline} {$response->event_time}"
+            );
+
+            $end = $start->copy()->addHour();
+
+            (new CreateCalendarEvent())->execute(
+                $response->action,
+                $response->message,
+                $start,
+                $end
+            );
         } catch (\Throwable $e) {
             if (str_contains($e->getMessage(), 'rate limited')) {
                 $this->release(delay: now()->addSeconds(60));
